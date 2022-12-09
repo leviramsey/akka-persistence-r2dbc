@@ -35,6 +35,25 @@ object TestConfig {
             database = "yugabyte"
           }
           """)
+
+      case "azure-cosmos" =>
+        ConfigFactory.parseString("""
+          akka.persistence.r2dbc {
+              connection-factory {
+              driver = "postgres"
+              host = ${AZURE_COSMOSDB_POSTGRES_HOST}
+              port = ${AZURE_COSMOSDB_POSTGRES_PORT}
+              user = ${AZURE_COSMOSDB_POSTGRES_USER}
+              password = ${AZURE_COSMOSDB_POSTGRES_PASS}
+              database = "citus"
+
+              ssl {
+                enabled = on
+                mode = require
+              }
+            }
+          }
+          """)
     }
 
     // using load here so that connection-factory can be overridden

@@ -45,7 +45,8 @@ final class R2dbcSettings(config: Config) {
 
   val dialect: Dialect = toRootLowerCase(config.getString("dialect")) match {
     case "yugabyte" => Dialect.Yugabyte
-    case "postgres" => Dialect.Postgres
+    case "postgres" | "azure-cosmos" =>
+      Dialect.Postgres // For now, assuming that Azure Cosmos is Postgres... we'll see how that turns out
     case other =>
       throw new IllegalArgumentException(s"Unknown dialect [$other]. Supported dialects are [yugabyte, postgres].")
   }

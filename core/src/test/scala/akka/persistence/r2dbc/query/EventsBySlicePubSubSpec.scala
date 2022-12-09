@@ -53,14 +53,15 @@ object EventsBySlicePubSubSpec {
       journal.publish-events = on
       #journal.publish-events-number-of-topics = 4
       journal.publish-events-dynamic {
-        throughput-threshold = 50
+        # changing because CosmosDB Postgres is dog-slow, at least from outside of Azure
+        throughput-threshold = 25
         throughput-collect-interval = 1 second
       }
 
       # no events from database query, only via pub-sub
       query.behind-current-time = 5 minutes
     }
-    akka.actor.testkit.typed.filter-leeway = 20.seconds
+    akka.actor.testkit.typed.filter-leeway = 200.seconds
     """)
     .withFallback(TestConfig.backtrackingDisabledConfig.withFallback(TestConfig.config))
 }
@@ -266,7 +267,7 @@ class EventsBySlicePubSubSpec
           })
           .runWith(Sink.ignore)
 
-        Await.result(done1, 20.seconds)
+        Await.result(done1, 200.seconds)
       }
 
       var count = 0
@@ -289,7 +290,7 @@ class EventsBySlicePubSubSpec
           })
           .runWith(Sink.ignore)
 
-        Await.result(done2, 20.seconds)
+        Await.result(done2, 200.seconds)
       }
 
     }
