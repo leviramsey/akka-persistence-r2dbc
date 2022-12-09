@@ -8,3 +8,13 @@ Single node CosmosDB Postgres
   * seems to only be able to hit 30-35 persists/second and the test needs >50 to fire, so I'll set the threshold to 30...
   * ...would you accept 25 per second?
   * ...tyvm
+
+Multi-node CosmosDB Postgres
+- Schema: creates successfully
+- Still treating as synonym for postgres...
+- Lots of test breakage:
+
+```
+Failed to persist event type [java.lang.String] with sequence number [1] for persistenceId [TestEntity-29|entity-1]
+Caused by: io.r2dbc.postgresql.ExceptionFactory$PostgresqlNonTransientResourceException: subqueries are not supported within INSERT queries
+```
