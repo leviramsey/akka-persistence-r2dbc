@@ -18,3 +18,8 @@ Multi-node CosmosDB Postgres
 Failed to persist event type [java.lang.String] with sequence number [1] for persistenceId [TestEntity-29|entity-1]
 Caused by: io.r2dbc.postgresql.ExceptionFactory$PostgresqlNonTransientResourceException: subqueries are not supported within INSERT queries
 ```
+
+20230123: starting this up again, with `db-timestamp-monotonic-increasing = on`
+
+* All core tests pass: huzzah!
+* All projection tests pass: double huzzah!

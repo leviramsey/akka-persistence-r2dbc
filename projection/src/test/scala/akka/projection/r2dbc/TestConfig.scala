@@ -35,6 +35,34 @@ object TestConfig {
             database = "yugabyte"
           }
           """)
+
+      case "azure-cosmos" =>
+        ConfigFactory.parseString("""
+          akka.persistence.r2dbc {
+            connection-factory {
+              driver = "postgres"
+              host = ${AZURE_COSMOSDB_POSTGRES_HOST}
+              port = ${AZURE_COSMOSDB_POSTGRES_PORT}
+              user = ${AZURE_COSMOSDB_POSTGRES_USER}
+              password = ${AZURE_COSMOSDB_POSTGRES_PASS}
+              database = "citus"
+  
+              ssl {
+                enabled = on
+                mode = require
+              }
+            }
+
+            # Assumes that the DB timestamp will not move meaningfully backwards in the
+            # duration between successive persists for the same persistence ID.
+            #
+            # Since we're distributing to Citus workers based on persistence ID, this
+            # implies that the maximum amount of time any worker's clock can go backwards
+            # is less than the minimum amount of time between event batches for a given
+            # persistence ID.
+            db-timestamp-monotonic-increasing = on
+          }
+          """)
     }
 
     // using load here so that connection-factory can be overridden

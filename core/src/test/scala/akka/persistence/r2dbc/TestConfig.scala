@@ -52,6 +52,15 @@ object TestConfig {
                 mode = require
               }
             }
+
+            # Assumes that the DB timestamp will not move meaningfully backwards in the
+            # duration between successive persists for the same persistence ID.
+            #
+            # Since we're distributing to Citus workers based on persistence ID, this
+            # implies that the maximum amount of time any worker's clock can go backwards
+            # is less than the minimum amount of time between event batches for a given
+            # persistence ID.
+            db-timestamp-monotonic-increasing = on
           }
           """)
     }
