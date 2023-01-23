@@ -23,3 +23,10 @@ Caused by: io.r2dbc.postgresql.ExceptionFactory$PostgresqlNonTransientResourceEx
 
 * All core tests pass: huzzah!
 * All projection tests pass: double huzzah!
+
+Summary of Differences from `main` (`9fbf8a2539`)
+=================================================
+* the different dialect exists strictly to allow the test configs to be clean: the underlying dialect is postgres
+* `db-timestamp-monotonic-increasing` is set `on`.  Since the DB timestamps are almost certainly not globally monotonic increasing, this entails making a bit of a bet that we can configure the projections and queries to emit in order and not lose events
+* some test timeouts and thresholds for throughput are tweaked: the existing tests tend to assume at least LAN-level connectivity; these testing runs are crossing the internet to Azure from a residential connection.
+* DDL for distributing tables on Citus/CosmosDB Postgres
