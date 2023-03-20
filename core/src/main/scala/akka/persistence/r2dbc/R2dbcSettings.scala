@@ -7,14 +7,21 @@ package akka.persistence.r2dbc
 import java.util.Locale
 
 import scala.collection.immutable
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.Failure
 
+import akka.actor.DynamicAccess
+import akka.actor.typed.ActorSystem
 import akka.annotation.InternalApi
 import akka.annotation.InternalStableApi
 import akka.persistence.r2dbc.internal.PayloadCodec
 import akka.util.JavaDurationConverters._
 import com.typesafe.config.Config
 import akka.util.Helpers.toRootLowerCase
+import io.r2dbc.spi.ConnectionFactory
+
+import akka.persistence.r2dbc.journal.JournalDao
 
 /**
  * INTERNAL API
@@ -22,14 +29,20 @@ import akka.util.Helpers.toRootLowerCase
 @InternalStableApi
 object R2dbcSettings {
   def apply(config: Config): R2dbcSettings =
-    new R2dbcSettings(config)
+    new R2dbcSettings(config, None)
+
+  def apply(system: ActorSystem[_], configPath: String) = {
+    val config = system.settings.config.getConfig(configPath)
+    val dynamicAccess = system.dynamicAccess
+    new R2dbcSettings(config, Some(dynamicAccess))
+  }
 }
 
 /**
  * INTERNAL API
  */
 @InternalStableApi
-final class R2dbcSettings(config: Config) {
+final class R2dbcSettings(config: Config, dynamicAccess: Option[DynamicAccess]) {
   val schema: Option[String] = Option(config.getString("schema")).filterNot(_.trim.isEmpty)
 
   val journalTable: String = config.getString("journal.table")
@@ -105,8 +118,21 @@ final class R2dbcSettings(config: Config) {
     case "yugabyte" => Dialect.Yugabyte
     case "postgres" => Dialect.Postgres
     case other =>
-      throw new IllegalArgumentException(s"Unknown dialect [$other]. Supported dialects are [yugabyte, postgres].")
+      dynamicAccess
+        .map {
+          _.createInstanceFor[Dialect](other, Nil)
+        }
+        .getOrElse {
+          // no dynamic access provided, so only the built-in options (viz. Postgres and Yugabyte) are available
+          Failure(
+            new IllegalArgumentException(s"Unknown dialect [$other]. Supported dialects are [yugabyte, postgres]."))
+        }
+        .get // throws the exception
   }
+
+  def getJournalDao(
+      connectionFactory: ConnectionFactory)(implicit ec: ExecutionContext, system: ActorSystem[_]): JournalDao =
+    dialect.getJournalDao(this, connectionFactory)
 
   val querySettings = new QuerySettings(config.getConfig("query"))
 
@@ -126,21 +152,6 @@ final class R2dbcSettings(config: Config) {
     }
 
   val cleanupSettings = new CleanupSettings(config.getConfig("cleanup"))
-}
-
-/**
- * INTERNAL API
- */
-@InternalStableApi
-sealed trait Dialect
-
-/**
- * INTERNAL API
- */
-@InternalStableApi
-object Dialect {
-  case object Postgres extends Dialect
-  case object Yugabyte extends Dialect
 }
 
 /**

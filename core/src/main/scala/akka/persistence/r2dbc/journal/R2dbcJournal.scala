@@ -89,9 +89,9 @@ private[r2dbc] final class R2dbcJournal(config: Config, cfgPath: String) extends
   private val journalSettings = R2dbcSettings(context.system.settings.config.getConfig(sharedConfigPath))
 
   private val journalDao =
-    new JournalDao(
-      journalSettings,
+    journalSettings.getJournalDao(
       ConnectionFactoryProvider(system).connectionFactoryFor(sharedConfigPath + ".connection-factory"))
+
   private val query = PersistenceQuery(system).readJournalFor[R2dbcReadJournal](sharedConfigPath + ".query")
 
   private val pubSub: Option[PubSub] =
