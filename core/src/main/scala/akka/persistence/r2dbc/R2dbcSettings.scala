@@ -55,6 +55,7 @@ final class R2dbcSettings(config: Config, dynamicAccess: Option[DynamicAccess]) 
       throw new IllegalStateException(
         s"Expected akka.persistence.r2dbc.$prefix.payload-column-type to be one of 'BYTEA', 'JSON' or 'JSONB' but found '$t'")
   }
+
   val journalPayloadCodec: PayloadCodec =
     if (useJsonPayload("journal")) PayloadCodec.JsonCodec else PayloadCodec.ByteArrayCodec
 

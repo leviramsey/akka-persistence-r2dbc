@@ -5,12 +5,16 @@
 package akka.persistence.r2dbc
 
 import akka.persistence.r2dbc.journal.JournalDao
+import akka.persistence.r2dbc.journal.PostgresJournalDao
 
 import akka.actor.typed.ActorSystem
 import akka.annotation.InternalStableApi
 import io.r2dbc.spi.ConnectionFactory
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import java.time.Instant
 
 /**
  * INTERNAL API
@@ -48,5 +52,9 @@ object Dialect {
   private def buildJournalDao(journalSettings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
       ec: ExecutionContext,
       system: ActorSystem[_]): JournalDao =
-    new JournalDao(journalSettings, connectionFactory)
+    if (journalSettings.dbTimestampMonotonicIncreasing) {
+      new PostgresJournalDao.MonotonicIncreasingDBTimestampJournalDao(journalSettings, connectionFactory)
+    } else {
+      new PostgresJournalDao.DBTimestampFromSubselectJournalDao(journalSettings, connectionFactory)
+    }
 }

@@ -69,12 +69,13 @@ final class R2dbcReadJournal(system: ExtendedActorSystem, config: Config, cfgPat
   import R2dbcReadJournal.ByPersistenceIdState
   import R2dbcReadJournal.PersistenceIdsQueryState
 
-  private val log = LoggerFactory.getLogger(getClass)
-  private val sharedConfigPath = cfgPath.replaceAll("""\.query$""", "")
-  private val settings = R2dbcSettings(system.settings.config.getConfig(sharedConfigPath))
-
   private val typedSystem = system.toTyped
   import typedSystem.executionContext
+
+  private val log = LoggerFactory.getLogger(getClass)
+  private val sharedConfigPath = cfgPath.replaceAll("""\.query$""", "")
+  private val settings = R2dbcSettings(typedSystem, sharedConfigPath)
+
   private val serialization = SerializationExtension(system)
   private val persistenceExt = Persistence(system)
   private val connectionFactory = ConnectionFactoryProvider(typedSystem)
@@ -110,7 +111,7 @@ final class R2dbcReadJournal(system: ExtendedActorSystem, config: Config, cfgPat
   private def bySlice[Event]: BySliceQuery[SerializedJournalRow, EventEnvelope[Event]] =
     _bySlice.asInstanceOf[BySliceQuery[SerializedJournalRow, EventEnvelope[Event]]]
 
-  private val journalDao = new JournalDao(settings, connectionFactory)(typedSystem.executionContext, typedSystem)
+  private val journalDao = settings.getJournalDao(connectionFactory)(executionContext, typedSystem)
 
   def extractEntityTypeFromPersistenceId(persistenceId: String): String =
     PersistenceId.extractEntityType(persistenceId)

@@ -56,11 +56,11 @@ final class EventSourcedCleanup(systemProvider: ClassicActorSystemProvider, conf
   private val log = LoggerFactory.getLogger(classOf[EventSourcedCleanup])
 
   private val sharedConfigPath = configPath.replaceAll("""\.cleanup$""", "")
-  private val settings = R2dbcSettings(system.settings.config.getConfig(sharedConfigPath))
+  private val settings = R2dbcSettings(system, sharedConfigPath)
 
   private val connectionFactory =
     ConnectionFactoryProvider(system).connectionFactoryFor(sharedConfigPath + ".connection-factory")
-  private val journalDao = new JournalDao(settings, connectionFactory)
+  private val journalDao = settings.getJournalDao(connectionFactory)
   private val snapshotDao =
     new SnapshotDao(settings, connectionFactory)
 
