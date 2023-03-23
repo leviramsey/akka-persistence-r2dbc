@@ -107,14 +107,14 @@ class MigrationTool(system: ActorSystem[_]) {
   private val parallelism = migrationConfig.getInt("parallelism")
 
   private val targetPluginId = migrationConfig.getString("target.persistence-plugin-id")
-  private val targetR2dbcSettings = R2dbcSettings(system.settings.config.getConfig(targetPluginId))
+  private val targetR2dbcSettings = R2dbcSettings(system, targetPluginId)
 
   private val serialization: Serialization = SerializationExtension(system)
 
   private val targetConnectionFactory = ConnectionFactoryProvider(system)
     .connectionFactoryFor(targetPluginId + ".connection-factory")
   private val targetJournalDao =
-    new JournalDao(targetR2dbcSettings, targetConnectionFactory)
+    targetR2dbcSettings.getJournalDao(targetConnectionFactory)
   private val targetSnapshotDao =
     new SnapshotDao(targetR2dbcSettings, targetConnectionFactory)
 

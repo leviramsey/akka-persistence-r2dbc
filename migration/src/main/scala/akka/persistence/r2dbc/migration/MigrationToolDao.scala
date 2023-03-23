@@ -13,14 +13,17 @@ import akka.annotation.InternalApi
 import akka.dispatch.ExecutionContexts
 import akka.persistence.r2dbc.internal.Sql.Interpolation
 import akka.persistence.r2dbc.internal.R2dbcExecutor
-import akka.persistence.r2dbc.journal.JournalDao.log
 import io.r2dbc.spi.ConnectionFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * INTERNAL API
  */
 @InternalApi private[r2dbc] object MigrationToolDao {
   final case class CurrentProgress(persistenceId: String, eventSeqNr: Long, snapshotSeqNr: Long)
+
+  val log: Logger = LoggerFactory.getLogger(classOf[MigrationToolDao])
 }
 
 /**
@@ -30,6 +33,7 @@ import io.r2dbc.spi.ConnectionFactory
     connectionFactory: ConnectionFactory,
     logDbCallsExceeding: FiniteDuration)(implicit ec: ExecutionContext, system: ActorSystem[_]) {
   import MigrationToolDao.CurrentProgress
+  import MigrationToolDao.log
 
   private val r2dbcExecutor = new R2dbcExecutor(connectionFactory, log, logDbCallsExceeding)(ec, system)
 
