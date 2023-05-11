@@ -61,8 +61,7 @@ final class EventSourcedCleanup(systemProvider: ClassicActorSystemProvider, conf
   private val connectionFactory =
     ConnectionFactoryProvider(system).connectionFactoryFor(sharedConfigPath + ".connection-factory")
   private val journalDao = settings.getJournalDao(connectionFactory)
-  private val snapshotDao =
-    new SnapshotDao(settings, connectionFactory)
+  private val snapshotDao = settings.getSnapshotDao(connectionFactory)
 
   /**
    * Delete all events before a sequenceNr for the given persistence id. Snapshots are not deleted.

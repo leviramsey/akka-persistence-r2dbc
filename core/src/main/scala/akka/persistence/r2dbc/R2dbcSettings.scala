@@ -22,6 +22,7 @@ import akka.util.Helpers.toRootLowerCase
 import io.r2dbc.spi.ConnectionFactory
 
 import akka.persistence.r2dbc.journal.JournalDao
+import akka.persistence.r2dbc.snapshot.SnapshotDao
 
 /**
  * INTERNAL API
@@ -134,6 +135,10 @@ final class R2dbcSettings(config: Config, dynamicAccess: Option[DynamicAccess]) 
   def getJournalDao(
       connectionFactory: ConnectionFactory)(implicit ec: ExecutionContext, system: ActorSystem[_]): JournalDao =
     dialect.getJournalDao(this, connectionFactory)
+
+  def getSnapshotDao(
+      connectionFactory: ConnectionFactory)(implicit ec: ExecutionContext, system: ActorSystem[_]): SnapshotDao =
+    dialect.getSnapshotDao(this, connectionFactory)
 
   val querySettings = new QuerySettings(config.getConfig("query"))
 

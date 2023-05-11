@@ -6,6 +6,8 @@ package akka.persistence.r2dbc
 
 import akka.persistence.r2dbc.journal.JournalDao
 import akka.persistence.r2dbc.journal.PostgresJournalDao
+import akka.persistence.r2dbc.snapshot.SnapshotDao
+import akka.persistence.r2dbc.snapshot.PostgresSnapshotDao
 
 import akka.actor.typed.ActorSystem
 import akka.annotation.InternalStableApi
@@ -26,9 +28,13 @@ import java.time.Instant
  */
 @InternalStableApi
 trait Dialect {
-  def getJournalDao(journalSettings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+  def getJournalDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
       ec: ExecutionContext,
       system: ActorSystem[_]): JournalDao
+
+  def getSnapshotDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+      ec: ExecutionContext,
+      system: ActorSystem[_]): SnapshotDao
 }
 
 /**
@@ -37,24 +43,36 @@ trait Dialect {
 @InternalStableApi
 object Dialect {
   case object Postgres extends Dialect {
-    def getJournalDao(journalSettings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+    def getJournalDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
         ec: ExecutionContext,
-        system: ActorSystem[_]): JournalDao = Dialect.buildJournalDao(journalSettings, connectionFactory)
+        system: ActorSystem[_]): JournalDao = Dialect.buildPostgresJournalDao(settings, connectionFactory)
+
+    def getSnapshotDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+        ec: ExecutionContext,
+        system: ActorSystem[_]): SnapshotDao = Dialect.buildPostgresSnapshotDao(settings, connectionFactory)
   }
 
   case object Yugabyte extends Dialect {
-    def getJournalDao(journalSettings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+    def getJournalDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
         ec: ExecutionContext,
-        system: ActorSystem[_]): JournalDao = Dialect.buildJournalDao(journalSettings, connectionFactory)
+        system: ActorSystem[_]): JournalDao = Dialect.buildPostgresJournalDao(settings, connectionFactory)
+
+    def getSnapshotDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+        ec: ExecutionContext,
+        system: ActorSystem[_]): SnapshotDao = Dialect.buildPostgresSnapshotDao(settings, connectionFactory)
   }
 
   // postgres and yugabyte have historically used the same DAOs
-  private def buildJournalDao(journalSettings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+  private def buildPostgresJournalDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
       ec: ExecutionContext,
       system: ActorSystem[_]): JournalDao =
-    if (journalSettings.dbTimestampMonotonicIncreasing) {
-      new PostgresJournalDao.MonotonicIncreasingDBTimestampJournalDao(journalSettings, connectionFactory)
+    if (settings.dbTimestampMonotonicIncreasing) {
+      new PostgresJournalDao.MonotonicIncreasingDBTimestampJournalDao(settings, connectionFactory)
     } else {
-      new PostgresJournalDao.DBTimestampFromSubselectJournalDao(journalSettings, connectionFactory)
+      new PostgresJournalDao.DBTimestampFromSubselectJournalDao(settings, connectionFactory)
     }
+
+  private def buildPostgresSnapshotDao(settings: R2dbcSettings, connectionFactory: ConnectionFactory)(implicit
+      ec: ExecutionContext,
+      system: ActorSystem[_]): SnapshotDao = new PostgresSnapshotDao.StandardImpl(settings, connectionFactory)
 }
